@@ -1,25 +1,29 @@
-const fs = require('fs');
-const pdf = require('pdf-parse');
-const path = require('path');
+const fs = require("fs")
+const pdf = require("pdf2json")
+
+const files = fs.readdirSync("pdf_files")
+console.log(files)
+let patients = []
 
 exports.uploadPDFGetController = (req,res,next) =>{
-    let dataBuffer = fs.readFileSync('./pdf_files/f.pdf')
 
-    pdf(dataBuffer).then(function(data) {
- 
-        // number of pages
-        console.log(data.numpages);
-        // number of rendered pages
-        console.log(data.numrender);
-        // PDF info
-        console.log(data.info);
-        // PDF metadata
-        console.log(data.metadata); 
-        // PDF.js version
-        // check https://mozilla.github.io/pdf.js/getting_started/
-        console.log(data.version);
-        // PDF text
-        res.send(data.text); 
-            
-    });
+
+   
+    (async () =>{
+        console.log("ia m here")
+        await Promise.all(files.map(async (file)=>{
+            let parser = new pdf(this,1)
+            console.log(parser)
+            parser.loadPDF(`pdf_files/${file}`)
+
+            let patient = await new Promise(async(response,rej)=>{
+                parser.on("pdfParser_dataReady" , (data) =>{
+                    const raw = parser.getRawTextContent().replace(/\r\n/g," ")
+                    console.log(raw)
+                    res.send(raw)
+                })
+            })
+        }))
+    })()
+
 }
